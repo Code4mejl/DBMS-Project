@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import API from "../api";
+import API from "../api.js";
 import { useNavigate } from "react-router-dom";
 import "../index.css"; // import the new CSS file
 

@@ -1,48 +1,142 @@
-import React, { useEffect, useState } from 'react';
-import API from '../api';
-import { authHeader } from '../auth';
+import React, { useState, useEffect } from "react";
+import API from "../api.js";
+import { FOOD_DATA } from "../foodData.js";
+import "./Dashboard.css";
 
-export default function Dashboard(){
-  const [foods,setFoods] = useState([]);
-  const [meals,setMeals] = useState([]);
-  const [form,setForm] = useState({food_id:'',quantity:100,meal_type:'Breakfast',date:new Date().toISOString().slice(0,10)});
+export default function Dashboard() {
+  const [meals, setMeals] = useState([]);
+  const [form, setForm] = useState({ meal_name: "", total_calories: "", notes: "" });
+  const [summary, setSummary] = useState(null);
+  const user_id = 1;
 
-  useEffect(()=>{ loadFoods(); loadMeals(); },[]);
-  async function loadFoods(){ const res = await API.get('/foods'); setFoods(res.data); }
-  async function loadMeals(){ try{ const res = await API.get('/meals?date=' + form.date, { headers: authHeader() }); setMeals(res.data);}catch(e){ setMeals([]); } }
-  async function addMeal(e){ e.preventDefault(); await API.post('/meals', form, { headers: authHeader() }); await loadMeals(); }
+  async function fetchMeals() {
+    try {
+      const res = await API.get(`/meals/${user_id}`);
+      setMeals(res.data);
+    } catch (err) {
+      console.error("Error fetching meals:", err);
+    }
+  }
+
+  useEffect(() => {
+    fetchMeals();
+  }, []);
+
+  function calculateNutrition(foodName, calories) {
+    const match = FOOD_DATA.find(
+      f => f.name.toLowerCase() === foodName.toLowerCase()
+    );
+    if (!match) return null;
+
+    const factor = calories / match.calories;
+    return {
+      protein: (match.protein * factor).toFixed(1),
+      carbs: (match.carbs * factor).toFixed(1),
+      fat: (match.fat * factor).toFixed(1)
+    };
+  }
+
+  async function handleAdd(e) {
+    e.preventDefault();
+    const nutrition = calculateNutrition(form.meal_name, form.total_calories);
+    setSummary(nutrition);
+    if (!nutrition) {
+      alert("Food not found in database. Try another name!");
+      return;
+    }
+
+    await API.post("/meals", { ...form, user_id, ...nutrition });
+    setForm({ meal_name: "", total_calories: "", notes: "" });
+    fetchMeals();
+  }
+
+  async function handleDelete(id) {
+    if (window.confirm("Delete this meal?")) {
+      await API.delete(`/meals/${id}`);
+      fetchMeals();
+    }
+  }
+
+  const totalCalories = meals.reduce((sum, m) => sum + Number(m.total_calories || 0), 0);
+  const totalProtein = meals.reduce((sum, m) => sum + Number(m.protein || 0), 0);
+  const totalCarbs = meals.reduce((sum, m) => sum + Number(m.carbs || 0), 0);
+  const totalFat = meals.reduce((sum, m) => sum + Number(m.fat || 0), 0);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl mb-4">Dashboard</h1>
-      <form onSubmit={addMeal} className="mb-4">
-        <select value={form.food_id} onChange={e=>setForm({...form,food_id:e.target.value})} className="p-2 border mr-2">
-          <option value="">Select food</option>
-          {foods.map(f=> <option key={f.food_id} value={f.food_id}>{f.name} - {f.calories} kcal/100g</option>)}
-        </select>
-        <input type="number" value={form.quantity} onChange={e=>setForm({...form,quantity:e.target.value})} className="p-2 border mr-2" />
-        <select value={form.meal_type} onChange={e=>setForm({...form,meal_type:e.target.value})} className="p-2 border mr-2">
-          <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option>
-        </select>
-        <input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})} className="p-2 border mr-2" />
-        <button className="p-2 bg-blue-600 text-white">Add</button>
+    <div className="dashboard">
+      <h1>🥗 Nutrition Dashboard</h1>
+
+      <form className="meal-form" onSubmit={handleAdd}>
+        <input
+          type="text"
+          placeholder="Food name (e.g. Rice, Egg)"
+          value={form.meal_name}
+          onChange={(e) => setForm({ ...form, meal_name: e.target.value })}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Calories"
+          value={form.total_calories}
+          onChange={(e) => setForm({ ...form, total_calories: e.target.value })}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Notes"
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        />
+        <button type="submit">➕ Add Meal</button>
       </form>
 
-      <h2 className="text-lg mb-2">Meals</h2>
-      <table className="w-full table-auto border">
-        <thead><tr><th>Food</th><th>Qty</th><th>kcal</th><th>Protein</th><th>Type</th></tr></thead>
+      {/* 🧮 Summary after upload */}
+      {summary && (
+        <div className="nutrition-summary">
+          <h3>🍽️ Nutrition Breakdown</h3>
+          <p>Protein: {summary.protein} g</p>
+          <p>Carbs: {summary.carbs} g</p>
+          <p>Fat: {summary.fat} g</p>
+        </div>
+      )}
+
+      <table>
+        <thead>
+          <tr>
+            <th>Meal</th>
+            <th>Calories</th>
+            <th>Protein (g)</th>
+            <th>Carbs (g)</th>
+            <th>Fat (g)</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody>
-          {meals.map(m => (
+          {meals.map((m) => (
             <tr key={m.meal_id}>
-              <td>{m.food_name}</td>
-              <td>{m.quantity} g</td>
-              <td>{((m.calories*m.quantity)/100).toFixed(1)}</td>
-              <td>{((m.protein*m.quantity)/100).toFixed(1)}</td>
-              <td>{m.meal_type}</td>
+              <td>{m.meal_name}</td>
+              <td>{m.total_calories}</td>
+              <td>{m.protein}</td>
+              <td>{m.carbs}</td>
+              <td>{m.fat}</td>
+              <td>{m.notes}</td>
+              <td>
+                <button onClick={() => handleDelete(m.meal_id)}>🗑️</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <div className="summary">
+        <h3>📊 Daily Summary</h3>
+        <p>Total Meals: {meals.length}</p>
+        <p>Calories: {totalCalories} kcal</p>
+        <p>Protein: {totalProtein} g</p>
+        <p>Carbs: {totalCarbs} g</p>
+        <p>Fat: {totalFat} g</p>
+      </div>
     </div>
   );
 }

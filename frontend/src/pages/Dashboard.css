@@ -1,0 +1,78 @@
+.dashboard {
+  width: 90%;
+  max-width: 900px;
+  margin: 30px auto;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 25px 35px;
+}
+
+h1 {
+  color: #2ec4b6;
+  margin-bottom: 20px;
+}
+
+.meal-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.meal-form input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  flex: 1;
+}
+
+button {
+  background-color: #2ec4b6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #ff9f1c;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th {
+  background-color: #2ec4b6;
+  color: white;
+  padding: 10px;
+}
+
+td {
+  border-bottom: 1px solid #eee;
+  padding: 10px;
+}
+
+.summary {
+  background: #f0fdfa;
+  margin-top: 25px;
+  border-radius: 10px;
+  padding: 15px;
+  color: #333;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .meal-form {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}

@@ -42,3 +42,4 @@ JWT secret in .env.example is 'supersecretkey'.
 ![Project Screenshot](https://ibb.co/CK2JZFhk)
 
 ![Project Screenshot](https://ibb.co/zVYmpHFY)
+<a href="https://ibb.co/zVYmpHFY"><img src="https://i.ibb.co/v4GcpvhG/Screenshot-2025-11-12-225723.png" alt="Screenshot-2025-11-12-225723" border="0"></a>

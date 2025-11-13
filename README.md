@@ -1,4 +1,4 @@
-# Personalized Diet and Nutrition Tracker (React + Express + MySQL)
+# Personalized Diet and Nutrition Tracker (React + Express + MySQL)m
 
 ## Quick start (Windows / Linux / macOS)
 
